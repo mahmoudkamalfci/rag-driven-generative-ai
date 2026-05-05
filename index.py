@@ -1,4 +1,6 @@
 import deeplake
+# from openai import OpenAI
+# import os
 
 # Initialize the local dataset
 ds = deeplake.empty('./openai_deeplake_db', overwrite=True)
