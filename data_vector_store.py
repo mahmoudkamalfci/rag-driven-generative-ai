@@ -16,6 +16,7 @@ def main():
         print("Missing API keys")
         return
         
+    # pyrefly: ignore [unexpected-keyword]
     client = Client(token=activeloop_token, workspace_id="first")
     
     # Drop table if exists for a fresh start
