@@ -1,5 +1,5 @@
 import os
-import openai
+from openai import OpenAI
 from dotenv import load_dotenv
 from deeplake import Client
 
@@ -10,7 +10,6 @@ RELEVANCE_THRESHOLD = 0.3
 def augment_prompt(user_prompt: str, context: str) -> str:
     return f"{user_prompt}\n\nContext:\n{context}"
 
-# pyrefly: ignore [unexpected-keyword]
 def setup_clients():
     load_dotenv()
     
@@ -19,11 +18,11 @@ def setup_clients():
     
     if not openai_key or not activeloop_token:
         return None, None
-        
-    openai.api_key = openai_key
+
+    openai_client = OpenAI(api_key=openai_key)
     # pyrefly: ignore [unexpected-keyword]
-    client = Client(token=activeloop_token, workspace_id="first")
-    return openai, client
+    deeplake_client = Client(token=activeloop_token, workspace_id="first")
+    return openai_client, deeplake_client
 
 def get_answer(openai_client, deeplake_client, query: str) -> str:
     # 1. Embed query
