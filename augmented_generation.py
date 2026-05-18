@@ -3,6 +3,10 @@ import openai
 from dotenv import load_dotenv
 from deeplake import Client
 
+# Minimum cosine similarity score to consider a retrieved chunk as relevant.
+# Scores range from -1 (opposite) to 1 (identical). Adjust this value as needed.
+RELEVANCE_THRESHOLD = 0.3
+
 def augment_prompt(user_prompt: str, context: str) -> str:
     return f"{user_prompt}\n\nContext:\n{context}"
 
@@ -17,6 +21,7 @@ def setup_clients():
         return None, None
         
     openai.api_key = openai_key
+    # pyrefly: ignore [unexpected-keyword]
     client = Client(token=activeloop_token, workspace_id="first")
     return openai, client
 
@@ -42,8 +47,12 @@ def get_answer(openai_client, deeplake_client, query: str) -> str:
     top_text = results[0]["text"]
     top_score = results[0]["similarity"]
     print(f"\n[Debug] Context Match Score: {top_score:.4f}\n")
-    
-    # 3. Augment Prompt
+
+    # 3. Relevance gate — skip LLM call if context is not relevant enough
+    if top_score < RELEVANCE_THRESHOLD:
+        return "No relevant information available for your query."
+
+    # 4. Augment Prompt
     augmented = augment_prompt(query, top_text)
     
     # 4. Ask LLM
