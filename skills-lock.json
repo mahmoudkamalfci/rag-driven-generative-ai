@@ -6,6 +6,12 @@
       "sourceType": "github",
       "skillPath": "skills/deeplake/SKILL.md",
       "computedHash": "6a99997e583c1e0ff87c6c33f07054ee28cba39c026a5b7c4e840a23ff514988"
+    },
+    "llamaindex-development": {
+      "source": "mindrally/skills",
+      "sourceType": "github",
+      "skillPath": "llamaindex-development/SKILL.md",
+      "computedHash": "d58fe97dcf455b0527a77b4a716fab56443a25b568f0ab80eb929d7dda92b8b2"
     }
   }
 }
