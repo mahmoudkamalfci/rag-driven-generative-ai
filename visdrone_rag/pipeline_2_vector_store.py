@@ -3,7 +3,8 @@ import os
 import sys
 sys.path.insert(0, os.path.dirname(__file__))
 
-from config import DEEPLAKE_DATASET_PATH, DATA_DIR  # noqa: E402
+# pyrefly: ignore [missing-import]
+from config import DEEPLAKE_DATASET_PATH, DATA_DIR, deeplake_client  # noqa: E402
 
 from llama_index.core import (  # noqa: E402
     VectorStoreIndex,
@@ -33,6 +34,21 @@ def main():
     print(f"Loaded {len(documents)} documents.")
 
     print(f"Creating DeepLake vector store at {DEEPLAKE_DATASET_PATH}...")
+    
+    # Drop and recreate/register the table via managed API to make it visible in the UI
+    try:
+        print("Dropping existing table in cloud control plane (if any)...")
+        deeplake_client.drop_table("visdrone_deeplake_store")
+    except Exception:
+        pass
+    
+    print("Registering new table with DeepLake cloud control plane...")
+    deeplake_client._create_table_via_api(
+        "visdrone_deeplake_store",
+        DEEPLAKE_DATASET_PATH,
+        {"text": "TEXT", "metadata": "JSONB", "embedding": "float4[]", "id": "TEXT"}
+    )
+
     vector_store = DeepLakeVectorStore(
         dataset_path=DEEPLAKE_DATASET_PATH,
         overwrite=True,
@@ -48,7 +64,6 @@ def main():
 
     print(f"\nVector store created at: {DEEPLAKE_DATASET_PATH}")
     print(f"Documents indexed: {len(documents)}")
-    print("Done! Existing cloud tables (llm_embeddings, my_first_table) untouched.")
 
 
 if __name__ == "__main__":

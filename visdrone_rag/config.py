@@ -17,8 +17,13 @@ if not ACTIVELOOP_TOKEN:
 os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
 os.environ["ACTIVELOOP_TOKEN"] = ACTIVELOOP_TOKEN
 
+# Initialize DeepLake Client to fetch cloud path and apply temporary credentials
+from deeplake import Client
+deeplake_client = Client(token=ACTIVELOOP_TOKEN, workspace_id="first")
+deeplake_client._apply_storage_creds()
+
 # Paths
 BASE_DIR = os.path.dirname(__file__)
 DATA_DIR = os.path.join(BASE_DIR, "data")
-DEEPLAKE_DATASET_PATH = os.path.join(BASE_DIR, "deeplake_store")
+DEEPLAKE_DATASET_PATH = deeplake_client._get_dataset_path("visdrone_deeplake_store")
 TREE_INDEX_DIR = os.path.join(BASE_DIR, "indexes", "tree_index")

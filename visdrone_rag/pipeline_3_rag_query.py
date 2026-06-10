@@ -3,6 +3,7 @@ import os
 import sys
 sys.path.insert(0, os.path.dirname(__file__))
 
+# pyrefly: ignore [missing-import]
 from config import DEEPLAKE_DATASET_PATH, DATA_DIR, TREE_INDEX_DIR  # noqa: E402
 
 from llama_index.core import (  # noqa: E402
