@@ -51,10 +51,13 @@ def fetch_and_clean(url):
         response.raise_for_status()
         soup = BeautifulSoup(response.content, 'html.parser')
 
-        # Prioritize "mw-parser-output" but fall back to "content" class
+        # Prioritize "mw-parser-output", then broaden to generic semantic elements
         content = (
             soup.find('div', {'class': 'mw-parser-output'})
             or soup.find('div', {'id': 'content'})
+            or soup.find('main')
+            or soup.find('article')
+            or soup.body
         )
         if content is None:
             return None
@@ -71,6 +74,9 @@ def fetch_and_clean(url):
 
         text = content.get_text(separator=' ', strip=True)
         text = clean_text(text)
+        # Skip pages with too little meaningful content (e.g. JS-only shells)
+        if len(text) < 200:
+            return None
         return text
     except requests.exceptions.RequestException as e:
         print(f"Error fetching content from {url}: {e}")
