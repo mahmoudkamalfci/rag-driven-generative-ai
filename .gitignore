@@ -1,2 +1,4 @@
 .env
-.venv
+.venvvisdrone_rag/data/
+visdrone_rag/deeplake_store/
+visdrone_rag/indexes/
