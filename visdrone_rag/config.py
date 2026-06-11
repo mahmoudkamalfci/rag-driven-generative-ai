@@ -19,7 +19,7 @@ os.environ["ACTIVELOOP_TOKEN"] = ACTIVELOOP_TOKEN
 
 # Initialize DeepLake Client to fetch cloud path and apply temporary credentials
 from deeplake import Client
-deeplake_client = Client(token=ACTIVELOOP_TOKEN, workspace_id="first")
+deeplake_client = Client(token=ACTIVELOOP_TOKEN, workspace_id="first")  # type: ignore
 deeplake_client._apply_storage_creds()
 
 # Paths

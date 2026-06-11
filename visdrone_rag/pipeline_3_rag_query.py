@@ -17,6 +17,16 @@ from llama_index.core import (  # noqa: E402
 from llama_index.vector_stores.deeplake import DeepLakeVectorStore  # noqa: E402
 from llama_index.embeddings.openai import OpenAIEmbedding  # noqa: E402
 from llama_index.llms.openai import OpenAI  # noqa: E402
+import time
+import numpy as np
+
+try:
+    from sentence_transformers import SentenceTransformer
+    from sklearn.metrics.pairwise import cosine_similarity
+    MODEL = SentenceTransformer('all-MiniLM-L6-v2')
+except ImportError:
+    MODEL = None
+
 
 # Configure LlamaIndex
 Settings.embed_model = OpenAIEmbedding(model="text-embedding-3-small")
@@ -59,6 +69,46 @@ def build_tree_query_engine():
     return index.as_query_engine(response_mode="tree_summarize")
 
 
+def calculate_cosine_similarity_with_embeddings(text1, text2):
+    """Calculate cosine similarity using sentence-transformers model embeddings."""
+    if MODEL is None:
+        return None
+    embeddings1 = MODEL.encode(text1)
+    embeddings2 = MODEL.encode(text2)
+    similarity = cosine_similarity([embeddings1], [embeddings2])
+    return similarity[0][0]
+
+
+def print_metrics(response, query, elapsed_time):
+    print("\n[Nodes Queried]")
+    nodes = response.source_nodes
+    print(f"Total Nodes: {len(nodes)}")
+    for i, node_with_score in enumerate(nodes):
+        node = node_with_score.node
+        print(f"  {i+1}. Node ID: {node.id_}, Chunk Size: {len(node.text)}")
+
+    print("\n[Performance Metrics]")
+    print(f"Query execution time: {elapsed_time:.4f} seconds")
+
+    # 1. Score-based metrics (if nodes have scores, e.g., VectorStoreIndex)
+    scores = [node.score for node in nodes if node.score is not None]
+    if scores:
+        weights = np.exp(scores) / np.sum(np.exp(scores))
+        average_score = np.average(scores, weights=weights)
+        perf_score = average_score / elapsed_time
+        print(f"Average score: {average_score:.4f}")
+        print(f"Performance metric (score-based): {perf_score:.4f}")
+
+    # 2. Similarity-based metrics (cosine similarity between query and response)
+    similarity_score = calculate_cosine_similarity_with_embeddings(query, str(response))
+    if similarity_score is not None:
+        perf_similarity = similarity_score / elapsed_time
+        print(f"Cosine Similarity Score: {similarity_score:.3f}")
+        print(f"Performance metric (similarity-based): {perf_similarity:.4f}")
+    else:
+        print("Cosine Similarity Score: N/A (install sentence-transformers & scikit-learn for similarity)")
+
+
 def main():
     print("=" * 60)
     print("  VisDrone RAG Query Engine")
@@ -88,17 +138,21 @@ def main():
                 continue
 
             print("\nThinking...")
+            start_time = time.time()
             if choice == '1':
                 response = vector_engine.query(query)
                 label = "Vector Store Index"
             else:
                 response = tree_engine.query(query)
                 label = "Tree Index"
+            elapsed_time = time.time() - start_time
 
             print(f"\n[{label}]")
             print("-" * 50)
             print(response)
             print("-" * 50)
+            
+            print_metrics(response, query, elapsed_time)
 
         except KeyboardInterrupt:
             print("\nExiting...")
